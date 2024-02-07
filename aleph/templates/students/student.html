@@ -7,7 +7,7 @@
 {% block main %}
 	<main class="container">
 		<h1 style="text-align: center; margin-bottom: 32px">Student</h1>
-		<article style="padding: 32px">
+		<article>
 			<div id="student">
 				<h2>{{ student_name }}</h2>
 				{% if 'edit' in request.args and request.method == 'GET' %}
@@ -46,7 +46,7 @@
 				{% endif %}
 			</div>
 	</article>
-	<article style="padding: 32px">
+	<article>
 			{% if siblings %}
 				<h3>Siblings</h3>
 				{% for sibling in siblings %}

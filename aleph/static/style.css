@@ -14,18 +14,8 @@
 		--table-row-stripped-background-color: #E6E9EA;
 }
 
-@media (prefers-color-scheme: dark) {
-	:root:not([data-theme]) {
-		--background-color: #121417;
-		--card-background-color: black;
-		--table-row-stripped-background-color: #0C1012;
-	}
-}
-
-:root[data-theme=dark] {
-		--background-color: #121417;
-		--card-background-color: black;
-		--table-row-stripped-background-color: #0C1012;
+input[type=search] {
+	background-color: var(--card-background-color);
 }
 
 /* MAIN MENU */
@@ -45,4 +35,65 @@
 	padding: 16px 32px;
 	background-color: var(--card-background-color);
 	border-bottom: var(--color) solid 2pt;
+}
+
+/* CONTAINERS */
+
+.container, .container-fluid {
+	text-align: center;
+	padding-top: 32px;
+}
+
+.container-fluid {
+	max-width: 1200px;
+}
+
+
+article {
+	text-align: left;
+	margin: 16px 0;
+	padding: 32px;
+}
+
+/* MISC. */
+
+.p-0 {
+	padding: 0;
+}
+
+.data {
+	margin-bottom: 24px;
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+/* FLASH MESSAGES */
+
+.error {
+	color: red;
+	margin-bottom: 16px;
+}
+
+/* TYPOGRAPHY */
+
+mark {
+	padding: 0;
+}
+
+h1, h2, h3 {
+	margin-bottom: 0.2em;
+}
+
+/* TABLES */
+
+table a {
+	--color: var(--color);
+}
+
+thead th, thead label {
+	font-weight: bold;
+}
+
+th input[type=radio] {
+	display: none;
 }

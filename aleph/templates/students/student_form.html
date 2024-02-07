@@ -1,0 +1,38 @@
+<div class="grid">
+	<div>
+		{{ student.first_name.label }}
+		{{ student.first_name }}
+	</div>
+	<div>
+		{{ student.last_name.label }}
+		{{ student.last_name }}
+	</div>
+	<div>
+		{{ student.group_id.label }}
+		{{ student.group_id }}
+	</div>
+</div>
+<h3>Parent</h3>
+{{ student.parent_id }}
+<div id="parent">
+	<div class="grid">
+		<div>
+			{{ parent.first_name.label }}
+			{{ parent.first_name }}
+		</div>
+		<div>
+			{{ parent.last_name.label }}
+			{{ parent.last_name }}
+		</div>
+	</div>
+	<div class="grid">
+		<div>
+			{{ parent.phone.label }}
+			{{ parent.phone }}
+		</div>
+		<div>
+			{{ parent.email.label }}
+			{{ parent.email }}
+		</div>
+	</div>
+</div>

@@ -14,7 +14,7 @@
 			   hx-swap="outerHTML"
 			   hx-select="tbody"
 			   hx-target="tbody">
-		<article style="padding: 16px 32px">
+		<article style="padding: 0 32px">
 			<nav>
 				<ul>
 					<li><a href="add">add</a></li>
@@ -34,11 +34,13 @@
 					</li>
 				</ul>
 				<span style="flex-grow: 1"></span>
-				{{ count }} students
+				<ul>
+					<li>{{ count }} students</li>
+				</ul>
 			</nav>
 		</article>
 	</header>
-	<article>
+	<article class="p-0">
 		<figure>
 			<table role="grid">
 				<thead>

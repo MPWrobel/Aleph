@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}SMS: {{ parent.phone }}{% endblock %}
+
+{% block main %}
+<main class="container">
+	<h2 style="text-align: center; margin-bottom: 32px">SMS</h2>
+	<article>
+		<p>
+		<b>To:</b> {{ parent.first_name }} {{ parent.last_name }}
+		({{ parent.phone | phone_number }})
+		</p>
+		<form autocomplete="off">
+			<textarea></textarea>
+			<button type="submit">Send</button>
+		</form>
+	</article>
+</main>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}New student{% endblock %}
+
+{% block main %}
+	<main class="container">
+		<h1 style="text-align: center; margin-bottom: 32px">New student</h1>
+		<article>
+			<div id="student">
+				<h2>Student</h2>
+				{% if request.method == 'GET' %}
+				<form autocomplete="off"
+					  hx-post
+					  hx-target="#student"
+					  hx-select="#student">
+					{% include 'students/student_form.html' %}
+					{% for type, message in get_flashed_messages(True) %}
+						<div class="{{ type }}">
+							{{ message }}
+						</div>
+					{% endfor %}
+					<button type="submit">Save</button>
+				</form>
+				{% else %}
+					{% include 'students/student_data.html' %}
+					<button hx-get
+							hx-select="#student"
+							hx-target="#student">Add next</button>
+				{% endif %}
+			</div>
+		</article>
+	</main>
+{% endblock %}
