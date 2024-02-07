@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% set student_name = student.first_name.data ~ ' ' ~ student.last_name.data %}
+
+{% block title %}{{ student_name }}{% endblock %}
+
+{% block main %}
+	<main class="container">
+		<h1 style="text-align: center; margin-bottom: 32px">Student</h1>
+		<article style="padding: 32px">
+			<div id="student">
+				<h2>{{ student_name }}</h2>
+				{% if 'edit' in request.args and request.method == 'GET' %}
+					<form autocomplete="off"
+						  hx-put
+						  hx-push-url="."
+						  hx-target="main"
+						  hx-select="main"
+						  hx-swap="outerHTML">
+						{% include 'students/student_form.html' %}
+						<button type="submit">Save changes</button>
+					</form>
+				{% else %}
+					{% include 'students/student_data.html' %}
+					<div class="grid">
+						<details role="list">
+							<summary aria-haspopup="listbox"
+									 role="button"
+									 class="secondary">
+								Message
+							</summary>
+							<ul role="listbox">
+								<li><a href="sms">send sms</a></li>
+								<li><a href="email">send email</a></li>
+							</ul>
+						</details>
+						<button hx-get="?edit"
+								hx-push-url="true"
+								hx-select="#student"
+								hx-target="#student"
+								hx-swap="outerHTML">Edit</button>
+						<button style="border-color: #C92B2D; background-color: #C92B2D"
+								hx-delete="delete"
+								hx-target="#student">Delete</button>
+					</div>
+				{% endif %}
+			</div>
+	</article>
+	<article style="padding: 32px">
+			{% if siblings %}
+				<h3>Siblings</h3>
+				{% for sibling in siblings %}
+					<ul>
+						<li>
+							<a href="/students/{{ sibling.student_id }}">
+								{{ sibling.student_name }}
+							</a>
+							(<a href="/groups/{{ sibling.group_id }}">{{ sibling.group_name }} {{ sibling.group_level }}</a>)
+						</li>
+					</ul>
+				{% endfor %}
+			{% endif %}
+			<details>
+				<summary role="button" class="secondary">Payments</summary>
+				<table>
+					{% for payment in payments %}
+						<tr>
+							<td>{{ payment.title }}</td>
+							<td>{{ payment.date }}</td>
+							<td>{{ "%.2f" | format(payment.paid) }}</td>
+						</tr>
+					{% endfor %}
+				</table>
+			</details>
+		</article>
+	</main>
+{% endblock %}

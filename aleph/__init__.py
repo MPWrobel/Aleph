@@ -17,12 +17,14 @@ def make_app(**test_config) -> Flask:
     else:
         app.config.from_pyfile('aleph.cfg')
 
-    from . import cli, db
+    from . import cli, db, filters
     cli.init_app(app)
     db.init_app(app)
+    filters.init_app(app)
 
-    from . import auth
+    from . import auth, students
     app.register_blueprint(auth.bp)
+    app.register_blueprint(students.bp)
 
     @app.route('/')
     def root():
