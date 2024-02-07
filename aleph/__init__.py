@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from shutil import copy
 from os import environ, mkdir, path
 
@@ -17,9 +17,16 @@ def make_app(**test_config) -> Flask:
     else:
         app.config.from_pyfile('aleph.cfg')
 
+    from . import cli, db
+    cli.init_app(app)
+    db.init_app(app)
+
+    from . import auth
+    app.register_blueprint(auth.bp)
+
     @app.route('/')
     def root():
-        return render_template('base.html')
+        return redirect(url_for('auth.log_in'))
 
     @app.errorhandler(404)
     def page_not_found(e):
