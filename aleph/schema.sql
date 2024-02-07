@@ -81,3 +81,9 @@ CREATE TABLE Payments (
 	student_id INTEGER,
 	FOREIGN KEY (student_id) REFERENCES Students (student_id)
 );
+
+CREATE VIEW PaymentsView AS
+	SELECT
+		title, date, sum / 100 AS paid, parent_id
+	FROM Payments
+	LEFT JOIN Students ON Payments.student_id = Students.student_id;
