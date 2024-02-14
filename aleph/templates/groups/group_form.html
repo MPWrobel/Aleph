@@ -1,0 +1,74 @@
+{% if 'edit' in request.args %}
+	<div class="grid">
+		<div>
+			{{ form.name.label }}
+			<div>
+				{{ form.name }}
+			</div>
+		</div>
+		<div>
+			<div style="display: inline-block; width: 220px">
+				{{ form.level_id.label }}
+				<div>
+					{{ form.level_id }}
+				</div>
+			</div>
+			<button style="display: inline-block; width: 110px; padding: 8px"
+					hx-get="{{ url_for('groups.levels') }}"
+					hx-push-url="false"
+					hx-select="dialog"
+					hx-swap="innerHTML"
+					hx-target="#dialog">Edit levels</button>
+		</div>
+	</div>
+	<label>Teachers</label>
+	<table style="width: 400px">
+		{% for teacher in ['Robert', 'Alex'] %}
+			<tr>
+				<td>
+					{{ teacher }}
+				</td>
+				<td>
+					<button class="delete"
+						style="width: unset; padding: 8px; display: inline-block">
+						Unassign</button>
+				</td>
+			</tr>
+		{% endfor %}
+		<tr>
+			<td></td>
+			<td>
+				<button style="width: unset; padding: 8px; display: inline-block"
+						hx-get="{{ url_for('groups.teachers') }}"
+						hx-push-url="false"
+						hx-select="dialog"
+						hx-swap="innerHTML"
+						hx-target="#dialog">
+					Assign</button>
+			</td>
+		</tr>
+	</table>
+{% else %}
+	<div class="grid">
+		<div>
+			{{ form.name.label }}
+			<div class="data">
+				{{ group.name }}
+			</div>
+		</div>
+		<div>
+			{{ form.level_id.label }}
+			<div class="data">
+				{{ group.level }}
+			</div>
+		</div>
+	</div>
+	<div>
+		<label>Teachers</label>
+		<ul>
+			{% for teacher in ['Robert', 'Alex'] %}
+				<li>{{ teacher }}</li>	
+			{% endfor %}
+		</ul>
+	</div>
+{% endif %}

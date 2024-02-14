@@ -22,13 +22,19 @@ def make_app(**test_config) -> Flask:
     db.init_app(app)
     filters.init_app(app)
 
-    from . import auth, students
+    from . import auth, lessons, students, groups
     app.register_blueprint(auth.bp)
+    app.register_blueprint(groups.bp)
+    app.register_blueprint(lessons.bp)
     app.register_blueprint(students.bp)
 
     @app.route('/')
     def root():
-        return redirect(url_for('auth.log_in'))
+        return redirect(url_for('students.index'))
+
+    @app.route('/null')
+    def null():
+        return ''
 
     @app.errorhandler(404)
     def page_not_found(e):

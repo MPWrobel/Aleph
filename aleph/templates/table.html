@@ -1,0 +1,77 @@
+{% macro table(table, items, actions,
+               search=True, sort_by='', id_column='rowid', sticky=True) %}
+	<div x-data="{search: '', sort_by: '{{ sort_by }}', sort_desc: false}">
+		<div id="table"
+			 x-data="table('{{ table }}', [{{ items  | map(attribute=id_column) | join(', ') }}])">
+			<article class="actions" {% if sticky %}x-bind="sticky"{% endif %}>
+				<nav style="flex-wrap: wrap">
+					<ul style="margin-right: 16px">
+						{% for label, action in actions.items() %}
+							<li>
+								{% if action[1] is not mapping %}
+									{% if action[0] == 'href' %}
+											<a href="{{ action[1] }}">
+													{{ label }}
+												</a>
+									{% elif action[0] == 'bulk' %}
+										<a hx-target="#dialog"
+										   x-bind="bulk_action('{{ url_for(table~'.'~action[1]) }}')">
+											{{ label }}
+										</a>
+									{% elif action[0] == 'action' %}
+										<a hx-target="#dialog"
+										   x-bind="action('{{ url_for(table~'.'~action[1]) }}')">
+											{{ label }}
+										</a>
+									{% endif %}
+								{% else %}
+									<details role="list"
+											 {% if action[0] == 'bulk' %}x-bind="bulk_action"{% endif %}>
+										<summary role="link">
+											{{ label }}
+										</summary>
+										<ul>
+											{% for label, action in action[1].items() %}
+												<li>
+													{% if action[0] == 'href' %}
+														<a href="{{ action[1] }}">
+															{{ label }}
+														</a>
+													{% elif action[0] == 'bulk' %}
+														<a hx-target="#dialog"
+														   x-bind="bulk_action('{{ url_for(table~'.'~action[1]) }}')">
+															{{ label }}
+														</a>
+													{% elif action[0] == 'action' %}
+														<a hx-target="#dialog"
+														   x-bind="action('{{ url_for(table~'.'~action[1]) }}')">
+															{{ label }}
+														</a>
+													{% endif %}
+												</li>
+											{% endfor %}
+										</ul>
+									</details>
+								{% endif %}
+							</li>
+						{% endfor %}
+					</ul>
+					<div style="display: flex; flex-grow: 1; text-align: right; align-items: center; padding: 8px 0">
+						<div style="flex-grow: 1">
+							{% if search %}<input x-bind="search">{% endif %}
+						</div>
+						<div style="width: 96px" x-text="selected_count"></div>
+					</div>
+				</nav>
+			</article>
+			<article style="padding: 0">
+				<figure>
+					<table role="grid"
+						x-data="{visible_items: [{{ items  | map(attribute=id_column) | join(', ') }}]}">
+						{{ caller() }}
+					</table>
+				</figure>
+			</article>
+		</div>
+	</div>
+{% endmacro %}

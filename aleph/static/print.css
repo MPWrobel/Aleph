@@ -1,0 +1,25 @@
+th, td {
+	font-size: 12px !important;
+}
+
+:root {
+	--background-color: white !important;
+}
+
+article {
+	box-shadow: none !important;
+	border-radius: 0 !important;
+	margin: 0 !important;
+}
+
+main {
+	padding: 0 !important;
+}
+
+h1, label, input, nav, header, select, button, .menubar {
+	display: none !important;
+}
+
+th>label {
+	display: unset !important;
+}

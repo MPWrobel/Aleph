@@ -1,77 +1,97 @@
 {% extends 'base.html' %}
 
-{% set student_name = student.first_name.data ~ ' ' ~ student.last_name.data %}
+{% set student_name = student.first_name ~ ' ' ~ student.last_name %}
 
 {% block title %}{{ student_name }}{% endblock %}
 
 {% block main %}
-	<main class="container">
-		<h1 style="text-align: center; margin-bottom: 32px">Student</h1>
-		<article>
-			<div id="student">
-				<h2>{{ student_name }}</h2>
-				{% if 'edit' in request.args and request.method == 'GET' %}
-					<form autocomplete="off"
-						  hx-put
-						  hx-push-url="."
-						  hx-target="main"
-						  hx-select="main"
-						  hx-swap="outerHTML">
-						{% include 'students/student_form.html' %}
-						<button type="submit">Save changes</button>
-					</form>
-				{% else %}
-					{% include 'students/student_data.html' %}
-					<div class="grid">
-						<details role="list">
-							<summary aria-haspopup="listbox"
-									 role="button"
-									 class="secondary">
-								Message
-							</summary>
-							<ul role="listbox">
-								<li><a href="sms">send sms</a></li>
-								<li><a href="email">send email</a></li>
-							</ul>
-						</details>
-						<button hx-get="?edit"
-								hx-push-url="true"
-								hx-select="#student"
-								hx-target="#student"
-								hx-swap="outerHTML">Edit</button>
-						<button style="border-color: #C92B2D; background-color: #C92B2D"
-								hx-delete="delete"
-								hx-target="#student">Delete</button>
-					</div>
-				{% endif %}
-			</div>
-	</article>
+	<h1 style="text-align: center; margin-bottom: 32px">Student</h1>
 	<article>
-			{% if siblings %}
-				<h3>Siblings</h3>
-				{% for sibling in siblings %}
-					<ul>
-						<li>
-							<a href="/students/{{ sibling.student_id }}">
-								{{ sibling.student_name }}
-							</a>
-							(<a href="/groups/{{ sibling.group_id }}">{{ sibling.group_name }} {{ sibling.group_level }}</a>)
-						</li>
-					</ul>
-				{% endfor %}
+		<div id="student">
+			<h2>{{ student_name }}</h2>
+			{% if 'edit' in request.args %}
+				<form autocomplete="off"
+					  hx-put="{{ url_for('students.student', id=student.student_id) }}"
+					  hx-push-url="true"
+					  hx-target="main"
+					  hx-select="main"
+					  hx-swap="outerHTML"
+					  x-data
+					  @keydown.enter.prevent="$refs.submit.click()">
+					{% include 'students/student_form.html' %}
+					<div class="grid">
+						<button class="secondary"
+								hx-push-url="true"
+								hx-get="{{ url_for('students.student', id=student.student_id) }}">
+							Cancel
+						</button>
+						<button x-ref="submit" type="submit">Save changes</button>
+					</div>
+				</form>
+			{% else %}
+				{% set readonly = True %}
+				{% include 'students/student_form.html' %}
+				<div class="grid">
+					<details role="list">
+						<summary style="text-align: center"
+								 role="button"
+								 class="secondary">
+							Message
+						</summary>
+						<ul role="listbox">
+							<li><a href="sms">send sms</a></li>
+							<li><a href="email">send email</a></li>
+						</ul>
+					</details>
+					<button hx-get="?edit"
+							hx-push-url="true"
+							hx-select="#student"
+							hx-target="#student"
+							hx-swap="outerHTML">Edit</button>
+					<button class="delete"
+							hx-vals='{"students": [{{ student.student_id }}]}'
+							hx-get="{{ url_for('students.delete') }}"
+							hx-target="#dialog"
+							hx-swap="innerHTML">Delete</button>
+				</div>
 			{% endif %}
-			<details>
-				<summary role="button" class="secondary">Payments</summary>
-				<table>
-					{% for payment in payments %}
-						<tr>
-							<td>{{ payment.title }}</td>
-							<td>{{ payment.date }}</td>
-							<td>{{ "%.2f" | format(payment.paid) }}</td>
-						</tr>
-					{% endfor %}
-				</table>
-			</details>
+		</div>
+	</article>
+	{% if siblings %}
+		<article>
+			<h3>Siblings</h3>
+			{% for sibling in siblings %}
+				<ul>
+					<li>
+						<a href="{{ url_for('students.student', id=sibling.student_id) }}">
+							{{ sibling.student_name }}
+						</a>
+						{% if sibling.group_id %}
+							(
+							<a href="{{ url_for('groups.group', id=sibling.group_id) }}">
+								{{ sibling.group_name }} {{ sibling.group_level }}
+							</a>
+							)
+						{% endif%}
+					</li>
+				</ul>
+			{% endfor %}
 		</article>
-	</main>
+	{% endif %}
+	<article>
+		<h3>Payment</h3>
+		{% if payments %}
+			<table>
+				{% for payment in payments %}
+					<tr>
+						<td>{{ payment.title }}</td>
+						<td>{{ payment.date }}</td>
+						<td>{{ "%.2f" | format(payment.paid) }}</td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			No payments
+		{% endif %}
+	</article>
 {% endblock %}

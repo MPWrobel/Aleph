@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block main %}
+	<style>
+		.menu {
+			display: none;
+		}
+		main, body, article {
+			box-shadow: none !important;
+			background-color: white !important;
+			margin: 0 !important;
+			padding: 0 !important;
+		}
+	</style>
+	<article style="padding: 32px">
+		{% for group in groups %}
+			<h2> {{ group.name }} <i>{{ group.level }}</i> </h2>
+			<table role="grid">
+				<thead>
+					<th>
+						#
+					</th>
+					<th>
+						student
+					</th>
+					<th>
+						phone
+					</th>
+					<th>
+						email
+					</th>
+				</thead>
+				<tbody>
+					{% for student in group.members %}
+						<tr>
+							<td style="width: 1em">
+								<i>{{ loop.index }}</i>
+							</td>
+							<td>
+								<a href="/students/{{ student.student_id }}">
+									{{ student.student_name }}
+								</a>
+							</td>
+							<td>
+								<a href="sms/{{ student.parent_id }}">
+									{{ student.phone | phone_number | nbsp }}
+								</a>
+							</td>
+							<td>
+								<a href="email/{{ student.parent_id }}">
+									{{ student.email }}
+								</a>
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+			<div style="break-after:page"></div>
+		{% endfor %}
+	</article>
+	<script>
+		window.print();
+		window.location.href = "/groups";
+	</script>
+{% endblock %}

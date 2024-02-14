@@ -1,0 +1,31 @@
+{% from 'table.html' import table %}
+<dialog open x-data @keydown.window.escape="$el.remove()">
+	<article style="width: 500px">
+		<h2>All teachers</h2>
+		{% call table('students', teachers, {
+		'add':     ('href', url_for('students.add')),
+		'remove':  ('bulk', 'delete'),
+		}, search=False, sort_by='student_name', sticky=False) %}
+		<thead>
+			<tr>
+				<th><input type="checkbox" x-bind="select_all"></th>
+				<th>teacher</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for teacher in teachers %}
+				<tr>
+					<td>
+						<input type="checkbox"
+							   x-bind="select_item({{ teacher.teacher_id }})">
+					</td>
+					<td>
+						{{ teacher.first_name }} {{ teacher.last_name }}
+					</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+		{% endcall %}
+		<button @click="$root.remove()" class="secondary">Close</button>
+	</article>
+</dialog>

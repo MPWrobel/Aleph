@@ -1,42 +1,85 @@
-from flask import abort, Blueprint, flash, request
+from flask import Blueprint, flash, request, url_for, render_template
 
-from .db import get_db
-from .forms import StudentForm, ParentForm
-from .utils import templated, choices
+from .db import Database, Table, confirm, fetchall, fetchone, get_db
+from .forms import StudentForm, ParentForm, validate
+from .utils import templated
 
 bp = Blueprint('students', __name__, url_prefix='/students')
 
 
+@Database.table
+class Parents(Table):
+    columns = ('parent_id', 'first_name', 'last_name', 'phone', 'email')
+
+    def fetchchildren(self, id):
+        SQL = "SELECT * FROM StudentsView WHERE parent_id = ?"
+        return self.db.execute(SQL, id).fetchall()
+
+    def fetchnames(self):
+        SQL = "SELECT parent_id, first_name, last_name FROM Parents"
+        return self.db.execute(SQL).fetchall()
+
+    # TODO: Replace with payments.fetchby('parent_id', id)
+    def fetchpayments(self, id):
+        SQL = "SELECT * FROM PaymentsView WHERE parent_id = ?"
+        return self.db.execute(SQL, id).fetchall()
+
+
+@Database.table
+class Students(Table):
+    view      = 'StudentsView'
+    search_by = 'student_name'
+    sort_by   = ('student_name', 'group_name')
+    columns   = ('student_id', 'first_name',
+                 'last_name', 'group_id', 'parent_id')
+
+    def fetchnames(self):
+        SQL = "SELECT student_id, first_name, last_name FROM Students"
+        return self.db.execute(SQL).fetchall()
+
+
 @bp.route('/')
-@templated
-def index():
+@fetchall('students')
+def index(students):
+    return {'students': students}
+
+
+@bp.route('<int:id>', methods=('GET', 'PUT'))
+@fetchone('students')
+def student(student):
     db = get_db()
-    count = db.students.count()
-    query = request.args.get('search')
 
-    students = db.students.fetchall(
-        query=query,
-        order_by=request.args.get('sort') or 'student_name'
-    )
+    student_form = StudentForm(request.form, data=student, prefix='student')
 
-    return {'students': students, 'count': count, 'query': query}
+    parent_id   = (request.args.get('student-parent_id')
+                   or student_form.parent_id.data)
+    parent_form = ParentForm(request.form,
+                             data=db.parents.fetchone(parent_id),
+                             prefix='parent')
+
+    if request.method == 'PUT' and validate(student_form, parent_form):
+        db.students.update(student['student_id'], student_form.data)
+        db.parents.update(parent_id, parent_form.data)
+        db.commit()
+        student = db.students.fetchone(student['student_id'])
+        student_name = f'{student_form.last_name.data} ' \
+            f'{student_form.first_name.data}'
+        flash(f'Updated <b>{student_name}</b>', 'info')
+
+    return {'student': student,
+            'group': db.groups.fetchone(student['group_id']),
+            'student_form': student_form, 'parent_form': parent_form,
+            'siblings': [child for child in db.parents.fetchchildren(parent_id)
+                         if child['student_id'] != student['student_id']],
+            'payments': db.parents.fetchpayments(parent_id)}
 
 
-@bp.route('/add', methods=('GET', 'POST'))
+@bp.route('add', methods=('GET', 'POST'))
 @templated
 def add():
     db = get_db()
 
     student_form = StudentForm(request.form, prefix='student')
-    student_form.parent_id.choices = choices(
-        db.parents.fetchall(),
-        'New parent',
-        'parent_id', ['first_name', 'last_name'])
-    student_form.group_id.choices = choices(
-        db.groups.fetchall(),
-        'No group',
-        'group_id', ['name'])
-
     parent_id = request.args.get('student-parent_id')
     parent = db.parents.fetchone(parent_id)
     parent_form = ParentForm(request.form, data=parent, prefix='parent')
@@ -44,79 +87,44 @@ def add():
     if request.method == 'POST' and (
         student_form.validate() and parent_form.validate()
     ):
-        db.parents.insert(parent_form.data)
-        student_form.parent_id.data = db.lastrowid
+        if student_form.parent_id.data is None:
+            db.parents.insert(parent_form.data)
+            student_form.parent_id.data = db.lastrowid
+        else:
+            db.parents.update(student_form.parent_id.data, parent_form.data)
         db.students.insert(student_form.data)
         db.commit()
-    else:
-        for errors in student_form.errors.values():
-            flash(errors[0], 'error')
-        for errors in parent_form.errors.values():
-            flash(errors[0], 'error')
+        student_name = f'{student_form.last_name.data} ' \
+            f'{student_form.first_name.data}'
+        flash(f'Added <b>{student_name}</b>', 'info')
 
-    return {'student': student_form, 'parent': parent_form}
+    return {'student_form': student_form, 'parent_form': parent_form,
+            'group': db.groups.fetchone(student_form.group_id.data)}
 
 
-@bp.route('/<int:id>/delete', methods=('GET', 'DELETE'))
-@bp.route('/delete', methods=('GET', 'DELETE'))
-@templated
-def delete(id=None):
+@bp.route('delete', methods=('GET', 'DELETE'))
+@confirm('students', 'student_name', 'Delete:')
+def delete():
     db = get_db()
-    student = db.students.fetchone(id)
-    students = [db.students.fetchone(id)
-                for id in request.args.getlist('students')]
-    return {'student': student, 'students': students}
+    for student in [db.students.fetchone(id)
+                    for id in request.form.getlist('students')]:
+        db.students.delete(student['rowid'])
+        flash('Deleted ' f'<b>{student["student_name"]}</b>', 'info')
+    db.students.commit()
+    return '', {'HX-Redirect': url_for('students.index')}
 
 
-@bp.route('/<int:id>/', methods=('GET', 'PUT'))
+@bp.route('email')
 @templated
-def student(id):
-    db = get_db()
-
-    student = db.students.fetchone(id)
-    if student is None:
-        abort(404)
-
-    student_form = StudentForm(request.form, data=student, prefix='student')
-    student_form.parent_id.choices = choices(
-        db.parents.fetchall(),
-        'New parent',
-        'parent_id', ['first_name', 'last_name'])
-    student_form.group_id.choices = choices(
-        db.groups.fetchall(),
-        'No group',
-        'group_id', ['name'])
-
-    parent_id = request.args.get('student-parent_id') or student_form.parent_id.data
-    parent = db.parents.fetchone(parent_id)
-
-    parent_form = ParentForm(request.form, data=parent, prefix='parent')
-
-    if request.method == 'PUT' and (
-        student_form.validate() and parent_form.validate()
-    ):
-        db.students.update(id, student_form.data)
-        db.parents.update(parent_id, parent_form.data)
-        db.commit()
-
-    siblings = db.students.fetchsiblings(id)
-    payments = db.payments.fetchbyparent(student['parent_id'])
-
-    return {'student': student_form, 'parent': parent_form,
-            'siblings': siblings, 'payments': payments}
-
-
-@bp.route('/<int:id>/email')
-@templated
-def email(id):
+def email():
     db = get_db()
     parent = db.parents.fetchone(id)
     return {'parent': parent}
 
 
-@bp.route('/<int:id>/sms')
+@bp.route('sms')
 @templated
-def sms(id):
+def sms():
     db = get_db()
     parent = db.parents.fetchone(id)
     return {'parent': parent}

@@ -1,132 +1,60 @@
+{% from 'table.html' import table %}
 {% extends 'base.html' %}
 
 {% block title %}Students{% endblock %}
 
 {% block main %}
-<main class="container-fluid">
-	<header>
-		<input name="search"
-			   type="search"
-			   autocomplete="off"
-			   hx-trigger="input changed delay:100ms, search"
-			   hx-include="input[name=sort]"
-			   hx-get
-			   hx-swap="outerHTML"
-			   hx-select="tbody"
-			   hx-target="tbody">
-		<article style="padding: 0 32px">
-			<nav>
-				<ul>
-					<li><a href="add">add</a></li>
-					<li><a href
-						   hx-get="delete"
-						   hx-include="input[name=students]"
-						   hx-swap="none">delete</a></li>
-					<li><a href="javascript:window.print()">print</a></li>
-					<li>
-						<details role="list" dir="rtl">
-							<summary aria-haspopup="listbox" role="link">message</summary>
-							<ul role="listbox">
-								<li><a href="">send sms</a></li>
-								<li><a href="">send email</a></li>
-							</ul>
-						</details>
-					</li>
-				</ul>
-				<span style="flex-grow: 1"></span>
-				<ul>
-					<li>{{ count }} students</li>
-				</ul>
-			</nav>
-		</article>
-	</header>
-	<article class="p-0">
-		<figure>
-			<table role="grid">
-				<thead>
-					<tr>
-						<th>
-							<input type="checkbox" name="select-all">
-						</th>
-						<th>
-							<label>
-								student
-								<input type="radio"
-									   name="sort"
-									   value="student_name" checked
-									   autocomplete="off"
-									   hx-include="input[name=search]"
-									   hx-get
-									   hx-swap="outerHTML"
-									   hx-select="tbody"
-									   hx-target="tbody">
-							</label>
-						</th>
-						<th>
-							<label>
-								group
-								<input type="radio"
-									   name="sort"
-									   value="group_id"
-									   autocomplete="off"
-									   hx-include="input[name=search]"
-									   hx-get
-									   hx-swap="outerHTML"
-									   hx-select="tbody"
-									   hx-target="tbody">
-							</label>
-						</th>
-						<th>
-							phone
-						</th>
-						<th>
-							email
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for student in students %}
-					<tr>
-						<td>
-							<input type="checkbox"
-								   name="students"
-								   value="{{ student.student_id }}">
-						</td>
-						<td>
-							<a href="{{ student.student_id }}">
-								{{ student.student_name | nbsp | highlight(query) }}
-							</a>
-						</td>
-						<td>
-							{% if student.group_id %}	
-							<a href="/groups/{{ student.group_id }}">
-								{{ student.group_name | nbsp }}
-								<i>{{ student.group_level }}</i>
-							</a>
-							{% endif %}
-						</td>
-						<td>
-							<a href="sms/{{ student.parent_id }}">
-								{{ student.phone | phone_number | nbsp }}
-							</a>
-						</td>
-						<td>
-							<a href="email/{{ student.parent_id }}">
-								{{ student.email }}
-							</a>
-						</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-		</figure>
-	</article>
-</main>
-<script>
-	document.querySelector("input[name=select-all]").onchange = e => {
-		for (const el of document.querySelectorAll("input[name=students]")) {
-			el.checked = e.target.checked;
-		}
-	}
-</script>
+	<h1>Students</h1>
+	{% call table('students', students, {
+		'add':     ('href', url_for('students.add')),
+		'delete':  ('bulk', 'delete'),
+		'message': ('bulk', {
+			'send sms':   ('bulk', 'sms'),
+			'send email': ('bulk', 'email'),
+		}),
+		'print': ('href', 'javascript:window.print()')
+	}, sort_by='student_name') %}
+	<thead>
+		<tr>
+			<th><input type="checkbox" x-bind="select_all"></th>
+			<th x-bind="sort('student_name')">student</th>
+			<th x-bind="sort('group_name')">group</th>
+			<th>phone</th>
+			<th>email</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for student in students %}
+			<tr>
+				<td>
+					<input type="checkbox"
+						   x-bind="select_item({{ student.student_id }})">
+				</td>
+				<td>
+					<a href="{{ url_for('students.student', id=student.student_id) }}">
+						{{ student.student_name | highlight(request.args.get('search')) | nbsp  }}
+					</a>
+				</td>
+				<td>
+					{%- if student.group_id %}	
+					<a href="{{ url_for('groups.group', id=student.group_id) }}">
+						{{ student.group_name | nbsp }}
+						<i>{{ student.group_level }}</i>
+					</a>
+				{% endif %}
+				</td>
+				<td>
+					<a href="{{ url_for('students.sms') }}?parent={{ student.parent_id }}">
+						{{ student.phone | phone_number | nbsp }}
+					</a>
+				</td>
+				<td>
+					<a href="{{ url_for('students.email') }}?parent={{ student.parent_id }}">
+						{{ student.email }}
+					</a>
+				</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+	{% endcall %}
 {% endblock %}

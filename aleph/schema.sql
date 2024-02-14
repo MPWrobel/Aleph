@@ -23,17 +23,16 @@ CREATE TABLE Students (
 );
 
 CREATE VIEW StudentsView AS
-	SELECT 
-		student_id,
+	SELECT
+		student_id AS rowid,
+		Students.*,
 		Students.last_name || ' ' || Students.first_name AS student_name,
-		Parents.parent_id,
 		Parents.last_name || ' ' || Parents.first_name AS parent_name,
 		phone,
 		email,
-		GroupsView.group_id,
 		GroupsView.name AS group_name,
 		GroupsView.level AS group_level
-	FROM students
+	FROM Students
 		LEFT JOIN parents ON Students.parent_id = Parents.parent_id
 		LEFT JOIN GroupsView ON Students.group_id = GroupsView.group_id;
 
@@ -64,13 +63,15 @@ CREATE TABLE GroupTeachers (
 
 CREATE VIEW GroupsView AS
 	SELECT
+		Groups.group_id as rowid,
 		Groups.*,
 		GroupLevels.name AS level,
 		COUNT() AS members 
-	FROM groups
+	FROM Groups
 		LEFT JOIN GroupLevels ON Groups.level_id = GroupLevels.level_id
 		LEFT JOIN students ON Groups.group_id = Students.group_id
 			GROUP BY Groups.rowid;
+
 
 CREATE TABLE Payments (
 	payment_id INTEGER PRIMARY KEY,

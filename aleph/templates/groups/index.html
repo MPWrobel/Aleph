@@ -1,0 +1,43 @@
+{% from 'table.html' import table %}
+{% extends 'base.html' %}
+
+{% block title %}Groups{% endblock %}
+
+{% block main %}
+	<h1>Groups</h1>
+	{% call table('groups', groups, {
+		'add':     ('href', url_for('students.add')),
+		'delete':  ('bulk', 'delete'),
+		'message': ('bulk', {
+			'send sms':   ('bulk', 'sms'),
+			'send email': ('bulk', 'email'),
+		}),
+		'print': ('href', 'javascript:window.print()')
+	}, sort_by='name') %}
+	<thead>
+		<tr>
+			<th style="width: 2em"><input type="checkbox" x-bind="select_all"></th>
+			<th x-bind="sort('name')" style="width: 9em">name</th>
+			<th x-bind="sort('level')" style="width: 9em">level</th>
+			<th x-bind="sort('members')">members</th>
+			<th>teachers</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for group in groups %}
+			<tr>
+				<td><input type="checkbox"
+						   x-bind="select_item({{ group.group_id }})"></td>
+				<td>
+					<a href="{{ url_for('groups.group', id=group.group_id) }}">
+						{{ group.name | highlight(request.args.get('search')) | nbsp }}
+					</a>
+				</td>
+				<td>{{ group.level }}</td>
+				<td>{{ group.members }}</td>
+				<td></td>
+			</tr>
+		{% endfor %}
+	</tbody>
+	{% endcall %}
+{% endblock %}

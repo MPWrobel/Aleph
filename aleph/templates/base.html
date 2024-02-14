@@ -7,19 +7,59 @@
 		<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 		<link href="{{ url_for('static', filename='pico.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='print.css') }}" media="print" rel="stylesheet">
+		<link href="{{ url_for('static', filename='tom-select.default.css') }}" rel="stylesheet">
+		<script src="{{ url_for('static', filename='aleph.js') }}"></script>
+		<script src="http://SortableJS.github.io/Sortable/Sortable.js"></script>
+		<script src="{{ url_for('static', filename='tom-select.complete.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='htmx.min.js') }}"></script>
+		<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
 		<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js"></script>
 		<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 	</head>
-	<body x-data>
+	<body>
 		<nav class="menu">
 			<a href="/" id="aleph-logo">Aleph</a>
 			<ul>
-				<li><a href="/students/">students</a></li>
-				<li><a href="/groups/">groups</a></li>
-				<li><a href="/payments/">payments</a></li>
+				{% for page in ['students', 'groups', 'payments'] %}
+					{%- if path is defined and page == path[0]  %} <b> {% endif -%}
+						<li>
+							<a href="{{ url_for(page~'.index') }}">
+								{{ page }}
+							</a>
+						</li>
+					{%- if path is defined and page == path[0]  %} </b> {% endif %}
+				{% endfor %}
 			</ul>
 		</nav>
-		{% block main %}{% endblock %}
+		<main class="container-fluid">
+			<div id="dialog"></div>
+			<ul class="flash">
+				{% for category, message in get_flashed_messages(with_categories=True) %}
+					<!-- TODO: Remove on finished transition -->
+					<li class="{{ category }}"
+						x-data="{visible: true}"
+						x-show="visible"
+						x-transition.duration.5000ms
+						x-init="setTimeout(() => $data.visible = false, 1000)">
+						{{ message | safe }}
+					</li>
+				{% endfor %}
+			</ul>
+			{% if g.user %}
+				{# {% if path is defined and path[1] != 'index' %} #}
+				{# 	<div style="height: 0"> #}
+				{# 		<a role="button" #}
+				{# 		   class="contrast" #}
+				{# 		   href="{{ url_for(path[0]~'.index') }}"> #}
+				{# 			back #}
+				{# 		</a> #}
+				{# 	</div> #}
+				{# {% endif %} #}
+				{% block main %}{% endblock %}
+			{% else %}
+				{% include 'auth/log-in.html' %}
+			{% endif %}
+		</main>
 	</body>
 </html>

@@ -37,10 +37,17 @@ input[type=search] {
 	border-bottom: var(--color) solid 2pt;
 }
 
+/* GRID */
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(0%, 1fr));
+  }
+}
+
+
 /* CONTAINERS */
 
 .container, .container-fluid {
-	text-align: center;
 	padding-top: 32px;
 }
 
@@ -50,12 +57,16 @@ input[type=search] {
 
 
 article {
-	text-align: left;
 	margin: 16px 0;
 	padding: 32px;
 }
 
 /* MISC. */
+
+.disabled {
+	pointer-events: none;
+	opacity: 50%;
+}
 
 .p-0 {
 	padding: 0;
@@ -67,11 +78,35 @@ article {
 	font-weight: bold;
 }
 
+button.delete {
+	border-color: #C92B2D;
+	background-color: #C92B2D;
+}
+
 /* FLASH MESSAGES */
 
-.error {
+ul.flash {
+	position: fixed;
+	top: 112px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+ul.flash>li { 
+	list-style: none; 
+	color: white;
+	opacity: 0.8;
+	width: 400px;
+	padding: 16px;
+	border-radius: 8px;
+}
+
+li.info {
+	background-color: #074080;
+}
+
+li.error {
 	color: red;
-	margin-bottom: 16px;
 }
 
 /* TYPOGRAPHY */
@@ -80,11 +115,70 @@ mark {
 	padding: 0;
 }
 
-h1, h2, h3 {
-	margin-bottom: 0.2em;
+h1 {
+	text-align: center;
+	margin: 0 0 0.5em 0;
+}
+
+h2, h3 {
+	margin: 0.4em 0;
 }
 
 /* TABLES */
+
+.sticky {
+	position: fixed;
+	top: 0;
+	left: 50%;
+	width: 90%;
+	transform: translateX(-50%);
+	z-index: 1;
+}
+
+.actions {
+	padding: 0 16px;
+}
+
+.actions nav {
+	align-items: center;
+}
+
+.actions li {
+	padding: 16px;
+}
+
+.actions input[type=search] {
+	width: 256px;
+	height: 48px;
+	margin: 0px;
+	border-radius: 4px;
+}
+
+.actions a:hover, .actions summary:hover {
+	cursor: pointer;
+	background-color: #EEEEEE;
+}
+
+.sortable::after {
+	width: 64px;
+	height: 1em;
+	display: inline-block;
+	transform: rotate(0deg);
+	background-image: var(--icon-chevron);
+	background-position: center;
+	background-repeat: no-repeat;
+	content: "";
+	transform: rotate(180deg);
+	opacity: 0.5;
+}
+
+.sort::after {
+	opacity: 1.0;
+}
+
+.sort_desc::after {
+	transform: rotate(0deg);
+}
 
 table a {
 	--color: var(--color);
@@ -96,4 +190,13 @@ thead th, thead label {
 
 th input[type=radio] {
 	display: none;
+}
+
+/* LEVELS */
+
+.level {
+	list-style: none; 
+	border: 2pt solid black;
+	margin: 4px 0;
+	padding: 8px;
 }

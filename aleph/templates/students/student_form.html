@@ -1,38 +1,100 @@
-<div class="grid">
-	<div>
-		{{ student.first_name.label }}
-		{{ student.first_name }}
-	</div>
-	<div>
-		{{ student.last_name.label }}
-		{{ student.last_name }}
-	</div>
-	<div>
-		{{ student.group_id.label }}
-		{{ student.group_id }}
-	</div>
-</div>
-<h3>Parent</h3>
-{{ student.parent_id }}
-<div id="parent">
+{% if not readonly %}
 	<div class="grid">
 		<div>
-			{{ parent.first_name.label }}
-			{{ parent.first_name }}
+			{{ student_form.first_name.label }}
+			{{ student_form.first_name }}
 		</div>
 		<div>
-			{{ parent.last_name.label }}
-			{{ parent.last_name }}
+			{{ student_form.last_name.label }}
+			{{ student_form.last_name }}
+		</div>
+		<div>
+			{{ student_form.group_id.label }}
+			{{ student_form.group_id }}
+		</div>
+	</div>
+	<h3>Parent</h3>
+	{{ student_form.parent_id }}
+	<div id="parent">
+		<div class="grid">
+			<div>
+				{{ parent_form.first_name.label }}
+				{{ parent_form.first_name }}
+			</div>
+			<div>
+				{{ parent_form.last_name.label }}
+				{{ parent_form.last_name }}
+			</div>
+		</div>
+		<div class="grid">
+			<div>
+				{{ parent_form.phone.label }}
+				{{ parent_form.phone }}
+			</div>
+			<div>
+				{{ parent_form.email.label }}
+				{{ parent_form.email }}
+			</div>
+		</div>
+	</div>
+{% else %}
+	<div class="grid">
+		<div>
+			{{ student_form.first_name.label }}
+			<div class="data">
+				{{ student_form.first_name.data }}
+			</div>
+		</div>
+		<div>
+			{{ student_form.last_name.label }}
+			<div class="data">
+				{{ student_form.last_name.data }}
+			</div>
+		</div>
+		<div>
+			{{ student_form.group_id.label }}
+			<div class="data">
+				{% if student_form.group_id.data %}
+					<a href="{{ url_for('groups.group', id=student_form.group_id.data) }}">
+						{{ group.name }} <i>{{ group.level }}</i>
+					</a>
+				{% else %}
+					No group
+				{% endif %}
+			</div>
+		</div>
+	</div>
+	<h3>Parent</h3>
+	<div class="grid">
+		<div>
+			{{ parent_form.first_name.label }}
+			<div class="data">
+				{{ parent_form.first_name.data }}
+			</div>
+		</div>
+		<div>
+			{{ parent_form.last_name.label }}
+			<div class="data">
+				{{ parent_form.last_name.data }}
+			</div>
 		</div>
 	</div>
 	<div class="grid">
 		<div>
-			{{ parent.phone.label }}
-			{{ parent.phone }}
+			{{ parent_form.phone.label }}
+			<div class="data">
+				<a href="{{ url_for('students.sms') }}?parent_form={{ student_form.parent_id.data }}">
+					{{ parent_form.phone.data | phone_number }}
+				</a>
+			</div>
 		</div>
 		<div>
-			{{ parent.email.label }}
-			{{ parent.email }}
+			{{ parent_form.email.label }}
+			<div class="data">
+				<a href="{{ url_for('students.email') }}?parent_form={{ student_form.parent_id.data }}">
+					{{ parent_form.email.data }}
+				</a>
+			</div>
 		</div>
 	</div>
-</div>
+{% endif %}

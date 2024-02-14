@@ -1,13 +1,18 @@
 import re
 
+from functools import wraps
 from markupsafe import Markup
+
+filters = []
 
 
 def filter(func):
+    @wraps(func)
     def wrapped(string, *args, **kwargs):
         if string is None:
             return
         return func(str(string), * args, **kwargs)
+    filters.append(wrapped)
     return wrapped
 
 
@@ -35,7 +40,11 @@ def nbsp(string):
     return Markup(string.replace(' ', '&nbsp;'))
 
 
+@filter
+def quotes(string):
+    return Markup(f"'{string}'")
+
+
 def init_app(app):
-    app.jinja_env.filters['highlight'] = highlight
-    app.jinja_env.filters['phone_number'] = phone_number
-    app.jinja_env.filters['nbsp'] = nbsp
+    for filter in filters:
+        app.jinja_env.filters[filter.__name__] = filter

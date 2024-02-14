@@ -1,0 +1,16 @@
+<dialog open x-data @keydown.window.escape="$el.remove()">
+	<article @click.outside="$root.remove()" style="width: 500px">
+		<h2>Confirm action</h2>
+		{{ message }}
+		<ul style="max-height: 500px; overflow-y: scroll">
+			{% for item in items %}<li>{{ item.name }}</li>{% endfor %}
+		</ul>
+		<p>
+		</p>
+		<div class="grid" style="margin-top: 32px">
+			<button @click="$root.remove()" class="secondary">Cancel</button>
+			<button hx-vals='{"{{ table }}": [{{ items  | map(attribute='id') | join(', ') }}]}'
+					hx-delete="{{ url_for(table~'.delete') }}">Confirm</button>
+		</div>
+	</article>
+</dialog>

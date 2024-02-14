@@ -1,9 +1,10 @@
 import sqlite3
 
-from flask import current_app, Flask, g
+from flask import abort, current_app, Flask, g, request, render_template
+from functools import wraps
 from os import path
 
-from .utils import unicmp
+from .utils import templated
 
 
 def init_app(app: Flask):
@@ -26,18 +27,69 @@ def get_db():
     return g.db
 
 
+def confirm(table, name_column, message):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if request.method == 'GET':
+                items = []
+                for id in request.args.getlist(table):
+                    item = getattr(get_db(), table).fetchone(id)
+                    items.append({'id': item['rowid'],
+                                  'name': item[name_column]})
+                return render_template('bulk_dialog.html',
+                                       table=table,
+                                       message=message,
+                                       items=items)
+            return func()
+        return wrapper
+    return decorator
+
+
+def fetchone(table):
+    def decorator(func):
+        @wraps(func)
+        @templated
+        def wrapper(*args, **kwargs):
+            row = getattr(get_db(), table).fetchone(kwargs['id'])
+            if row is None:
+                abort(404)
+            return func(row)
+        return wrapper
+    return decorator
+
+
+def fetchall(table):
+    def decorator(func):
+        @wraps(func)
+        @templated
+        def wrapper(*args, **kwargs):
+            rows = getattr(get_db(), table).fetchall(
+                query=request.args.get('search'),
+                order_by=request.args.get('sort'),
+                desc=request.args.get('desc') == "true")
+            if rows is None:
+                abort(404)
+            return func(rows)
+        return wrapper
+    return decorator
+
+
 class Database:
-    tables = []
+    tables     = []
+    collations = []
 
     def __init__(self):
         database_path = path.join(current_app.instance_path,
                                   current_app.config['DATABASE'])
         self.con = sqlite3.connect(database_path)
         self.con.row_factory = sqlite3.Row
-        self.con.create_collation('unicode', unicmp)
         self.cur = self.con.cursor()
 
-        for Table in Database.tables:
+        for collation in self.collations:
+            self.con.create_collation(collation.__name__, collation)
+
+        for Table in self.tables:
             Table.db = self
             setattr(self, Table.__name__.lower(), Table())
 
@@ -68,143 +120,122 @@ class Database:
     def commit(self):
         return self.con.commit()
 
+    def collation(collation):
+        Database.collations.append(collation)
+        return collation
+
     def table(cls):
         Database.tables.append(cls)
         return cls
 
 
+# BUG: Ź and Ż are treated the same
+@Database.collation
+def unicmp(s1, s2):
+    from .utils import ascii
+    for c1, c2 in zip(s1, s2):
+        a1, a2 = ascii(c1), ascii(c2)
+        o1, o2 = ord(a1), ord(a2)
+        if o1 > o2:
+            return 1
+        elif o1 < o2:
+            return -1
+        elif a1 != c1 and a2 == c2:
+            return 1
+        elif a1 == c1 and a2 != c2:
+            return -1
+        else:
+            continue
+    return 0
+
+
+@Database.collation
+def natcmp(s1, s2):
+    n1, n2 = [], []
+
+    for c1 in s1:
+        if c1.isdigit():
+            n1.append(c1)
+        elif n1:
+            break
+    for c2 in s2:
+        if c2.isdigit():
+            n2.append(c2)
+        elif n2:
+            break
+
+    if n1 and n2:
+        s1 = int(''.join(n1))
+        s2 = int(''.join(n2))
+    else:
+        return unicmp(s1, s2)
+
+    if s1 > s2:
+        return 1
+    elif s1 < s2:
+        return -1
+    else:
+        return 0
+
+
 class Table:
-    columns = tuple()
+    view      = None
+    columns   = ('',)
+    search_by = ''
+    sort_by   = ('',)
+
+    def __init__(self):
+        self.table = self.__class__.__name__
+        self.table_or_view = self.view or self.table
+
+    def commit(self):
+        return self.db.commit()
 
     def insert(self, data):
         bind = ', '.join(f':{column}' for column in self.columns)
         data = {column: data.get(column) for column in self.columns}
-        SQL = f"INSERT INTO {self.__class__.__name__} VALUES ({bind})"
+        SQL = f"INSERT INTO {self.table} VALUES ({bind})"
         self.db.execute(SQL, **data)
 
     def update(self, id, data):
         data = {key: val for key, val in data.items() if key in self.columns}
         bind = ', '.join(f"{key} = :{key}" for key in data)
-        SQL = f"UPDATE {self.__class__.__name__} SET {bind} WHERE rowid = :rowid"
+        SQL = f"UPDATE {self.table} SET {bind} WHERE rowid = :rowid"
         self.db.execute(SQL, rowid=id, **data)
 
+    def delete(self, id):
+        SQL = f"DELETE FROM {self.table} WHERE rowid = ?"
+        return self.db.execute(SQL, id)
+
     def count(self):
-        SQL = f"SELECT COUNT() AS count FROM {self.__class__.__name__}"
+        SQL = f"SELECT COUNT() AS count FROM {self.table_or_view}"
         return self.db.execute(SQL).fetchone()['count']
 
-    def fetchall(self):
-        SQL = f"SELECT * FROM {self.__class__.__name__}"
-        return self.db.execute(SQL).fetchall()
-
-    def fetchone(self, id):
-        SQL = f"SELECT * FROM {self.__class__.__name__} WHERE rowid = ?"
-        return self.db.execute(SQL, id).fetchone()
-
-
-@Database.table
-class Users(Table):
-    columns = ('user_id', 'username', 'password')
-
-    def fetchbyusername(self, username):
-        SQL = 'SELECT * FROM users WHERE username LIKE ?'
-        return self.db.execute(SQL, username).fetchone()
-
-
-@Database.table
-class Parents(Table):
-    columns = ('parent_id',
-               'first_name', 'last_name',
-               'phone', 'email')
-
-    def fetchchildren(self, id):
-        SQL = "SELECT * FROM Students WHERE parent_id = ?"
-        return self.db.execute(SQL, id).fetchall()
-
-    def fetchnames(self):
-        SQL = "SELECT parent_id, first_name, last_name FROM Parents"
-        return self.db.execute(SQL).fetchall()
-
-
-@Database.table
-class Students(Table):
-    columns = ('student_id',
-               'first_name', 'last_name',
-               'group_id', 'parent_id')
-
-    def fetchsiblings(self, id):
-        SQL = """SELECT Sibling.*, ? AS id FROM StudentsView Student
-JOIN StudentsView Sibling ON Student.parent_id = Sibling.parent_id
-WHERE Student.student_id = id AND Sibling.student_id != id"""
-        return self.db.execute(SQL, id).fetchall()
-
-    # TODO: Add unicode-insensitive search
-    def fetchall(self, query=None, order_by=None):
-        SQL = ["SELECT * FROM StudentsView"]
+    def fetchall(self, query=None, order_by=None, desc=False):
+        SQL = [f"SELECT * FROM {self.table_or_view}"]
         ARGS = []
         if query:
-            SQL.append("WHERE student_name LIKE ?")
+            SQL.append(f"WHERE {self.search_by} LIKE ?")
             ARGS.append(f'%{query}%')
-        if order_by in self.columns:
-            SQL.append(f"ORDER BY {order_by} COLLATE unicode")
-        print(SQL, ARGS)
+        if order_by in self.sort_by or (order_by := self.sort_by[0]):
+            SQL.append(f"ORDER BY {order_by}")
+            SQL.append("COLLATE natcmp")
+            if (desc):
+                SQL.append("DESC")
         return self.db.execute('\n'.join(SQL), *ARGS).fetchall()
 
-    def fetchnames(self):
-        SQL = "SELECT student_id, first_name, last_name FROM Students"
-        return self.db.execute(SQL).fetchall()
-
-    # TODO: Consider generalizing fetchby methods
-    def fetchbyparent(self, id):
-        SQL = "SELECT * FROM Students WHERE parent_id = ?"
-        return self.db.execute(SQL, id).fetchone()
-
-
-@Database.table
-class Groups(Table):
     def fetchone(self, id):
-        SQL = "SELECT * FROM GroupsView WHERE group_id = ?"
+        SQL = f"SELECT * FROM {self.table_or_view} WHERE rowid = ?"
         return self.db.execute(SQL, id).fetchone()
 
-    def fetchall(self):
-        SQL = "SELECT * FROM GroupsView"
-        return self.db.execute(SQL).fetchall()
+    def fetchoneby(self, column, value):
+        if column not in self.columns:
+            return None
+        SQL = f'SELECT * FROM {self.table_or_view} WHERE {column} LIKE ?'
+        return self.db.execute(SQL, value).fetchone()
 
-    # TODO: Rename to fetchgroup and move to Students
-    def fetchmembers(self, id):
-        SQL = "SELECT * FROM StudentsView WHERE group_id = ?"
-        return self.db.execute(SQL, id).fetchall()
-
-
-@Database.table
-class GroupLevels(Table):
-    pass
-
-
-@Database.table
-class Payments(Table):
-    columns = ('payer', 'title', 'sum', 'date', 'student_id')
-
-    def fetchall(self):
-        SQL = """SELECT *
-FROM Payments
-LEFT JOIN Students ON Payments.student_id = Students.student_id"""
-        return self.db.execute(SQL).fetchall()
-
-    def fetchnotassigned(self):
-        SQL = "SELECT * FROM Payments WHERE student_id IS NULL"
-        return self.db.execute(SQL).fetchall()
-
-    def fetchone(self, id):
-        SQL = """SELECT * FROM Payments
-LEFT JOIN Students ON Payments.student_id = Students.student_id
-WHERE payment_id = ?"""
-        return self.db.execute(SQL, id).fetchone()
-
-    def fetchbyparent(self, id):
-        SQL = "SELECT * FROM PaymentsView WHERE parent_id = ?"
-        return self.db.execute(SQL, id).fetchall()
-
-    def updatestudent(self, payment_id, student_id):
-        SQL = "UPDATE Payments SET student_id = ? WHERE payment_id = ?"
-        self.db.execute(SQL, student_id, payment_id)
-        self.db.commit()
+    def fetchallby(self, column, value):
+        if column not in self.columns:
+            return None
+        SQL = f'SELECT * FROM {self.table_or_view} WHERE {column} LIKE ?'
+        return self.db.execute(SQL, value).fetchall()
