@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% set student_name = student.first_name ~ ' ' ~ student.last_name %}
+
+{% set view = namespace(table='students', id=student.student_id) %}
+{% include 'view.html' %}
+
+{% block title %}{{ student_name }}{% endblock %}
+
+{% block main %}
+	<h1 style="text-align: center; margin-bottom: 32px">Student</h1>
+	<article>
+		<div id="student">
+			<h2>{{ student_name }}</h2>
+			{% if 'edit' in request.args %}
+				<form {{ view.update }}>
+					{% include 'students/student_form.html' %}
+					<div class="grid">
+						{{ view.cancel }} {{ view.save }}
+					</div>
+				</form>
+			{% else %}
+				{% set readonly = True %}
+				{% include 'students/student_form.html' %}
+				<div class="grid">
+					{{ view.message }} {{ view.edit }} {{ view.delete }}
+				</div>
+			{% endif %}
+		</div>
+	</article>
+	{% if siblings %}
+		<article>
+			<h3>Siblings</h3>
+			<ul>
+				{% for sibling in siblings %}
+					<li>
+						<a href="{{ url_for('students.view', id=sibling.student_id) }}">
+							{{ sibling.student_name }}
+						</a>
+						{% if sibling.group_id %}
+							{% set group_url = url_for('groups.view', id=sibling.group_id) %}
+							(<a href="{{ group_url }}">{{ sibling.group_name }} {{ sibling.group_level }}</a>)
+						{% endif%}
+					</li>
+				{% endfor %}
+			</ul>
+		</article>
+	{% endif %}
+	<article>
+		<h3>Payments</h3>
+		{% if payments %}
+			<table>
+				{% for payment in payments %}
+					<tr>
+						<td>{{ payment.title }}</td>
+						<td>{{ payment.date }}</td>
+						<td>{{ "%.2f" | format(payment.sum / 100) }}</td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			No payments
+		{% endif %}
+	</article>
+{% endblock %}

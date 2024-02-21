@@ -6,7 +6,7 @@
 {% block main %}
 	<h1>Groups</h1>
 	{% call table('groups', groups, {
-		'add':     ('href', url_for('students.add')),
+		'add':     ('href', url_for('groups.add')),
 		'delete':  ('bulk', 'delete'),
 		'message': ('bulk', {
 			'send sms':   ('bulk', 'sms'),
@@ -29,7 +29,7 @@
 				<td><input type="checkbox"
 						   x-bind="select_item({{ group.group_id }})"></td>
 				<td>
-					<a href="{{ url_for('groups.group', id=group.group_id) }}">
+					<a href="{{ url_for('groups.view', id=group.group_id) }}">
 						{{ group.name | highlight(request.args.get('search')) | nbsp }}
 					</a>
 				</td>

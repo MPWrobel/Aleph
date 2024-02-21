@@ -4,8 +4,7 @@
 		x-data="{levels: [{{ levels | map(attribute='name') | map('quotes') | join(', ') }}]}">
 	<article style="width: 500px; --typography-spacing-vertical: 0">
 		<h2>Levels</h2>
-		<ul style="padding: 0"
-			x-init="Sortable.create($el, {animation: 150, onSort(e) {console.log([...document.querySelectorAll('.level')].map(el => el.dataset.level))}})">
+		<ul style="padding: 0">
 			<template x-for="level in levels">
 				<li class="level" :data-level="level">
 					<input style="width: 256px"

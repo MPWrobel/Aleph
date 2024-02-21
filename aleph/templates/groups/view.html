@@ -1,6 +1,9 @@
 {% from 'table.html' import table %}
 {% extends 'base.html' %}
 
+{% set view = namespace(table='groups', id=group.group_id) %}
+{% include 'view.html' %}
+
 {% block title %}{{ group.name }}{% endblock %}
 
 {% block main %}
@@ -8,46 +11,17 @@
 	<article>
 		<h2>{{ group.name }} <i>{{ group.level }}</i></h2>
 		{% if 'edit' in request.args %}
-			<form autocomplete="off"
-				  hx-put="{{ url_for('groups.group', id=group.group_id) }}"
-				  hx-push-url="true"
-				  hx-target="main"
-				  hx-select="main"
-				  hx-swap="outerHTML">
+			<form {{ view.update }}>
 				{% include 'groups/group_form.html' %}
 				<div class="grid">
-					<button class="secondary"
-							hx-push-url="true"
-							hx-get="{{ url_for('groups.group', id=group.group_id) }}">
-						Cancel
-					</button>
-					<button type="submit">Save changes</button>
+					{{ view.cancel }} {{ view.save }}
 				</div>
 			</form>
 		{% else %}
+			{% set readonly = True %}
 			{% include 'groups/group_form.html' %}
 			<div class="grid">
-				<details role="list">
-					<summary style="text-align: center"
-							 role="button"
-							 class="secondary">
-						Message all
-					</summary>
-					<ul role="listbox">
-						<li><a href="sms">send sms</a></li>
-						<li><a href="email">send email</a></li>
-					</ul>
-				</details>
-				<button hx-get="?edit"
-						hx-push-url="true"
-						hx-select="main"
-						hx-target="main"
-						hx-swap="outerHTML">Edit</button>
-				<button class="delete"
-						hx-vals='{"students": [{{ student_id }}]}'
-						hx-get="{{ url_for('students.delete') }}"
-						hx-target="#dialog"
-						hx-swap="innerHTML">Delete</button>
+				{{ view.message }} {{ view.edit }} {{ view.delete }}
 			</div>
 		{% endif %}
 	</article>
@@ -80,7 +54,7 @@
 					<i>{{ loop.index }}</i>
 				</td>
 				<td>
-					<a href="{{ url_for('students.student', id=student.student_id) }}">
+					<a href="{{ url_for('students.view', id=student.student_id) }}">
 						{{ student.student_name }}
 					</a>
 				</td>

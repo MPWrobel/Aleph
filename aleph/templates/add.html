@@ -1,0 +1,28 @@
+{%- set add.add -%}
+	x-data
+	autocomplete="off"
+	hx-post
+	hx-target="main"
+	hx-select="main"
+	hx-swap="outerHTML"
+	@keydown.enter.prevent="$dispatch('submit')"
+{%- endset -%}
+
+{%- set add.cancel -%}
+	<button class="secondary" 
+			@click.prevent="window.location.href = '{{ url_for(table~'.index') }}'">
+		Cancel
+	</button>
+{%- endset -%}
+
+{%- set add.save -%}
+	<button type="submit">Save</button>
+{%- endset -%}
+
+{%- set add.next -%}
+	<button hx-get
+			hx-select="main"
+			hx-target="main"
+			hx-swap="outerHTML"
+			@keydown.enter.window.prevent="$el.click()">Add next</button>
+{%- endset -%}

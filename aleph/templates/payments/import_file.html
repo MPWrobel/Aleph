@@ -1,0 +1,11 @@
+<dialog open x-data @keydown.window.escape="$el.remove()">
+	<article @click.outside="$root.remove()" style="width: 500px">
+		<form method="post"
+			  action="{{ url_for('payments.import_file') }}"
+			  enctype="multipart/form-data">
+			<h2>Import file</h2>
+			<input type="file" name="file">
+			<button type="submit">Import</button>
+		</form>
+	</article>
+</dialog>

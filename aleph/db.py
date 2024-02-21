@@ -18,7 +18,10 @@ def init_app(app: Flask):
     app.teardown_appcontext(close_db)
 
 
-def get_db():
+def get_db(login_required=True):
+    if login_required and 'user' not in g:
+        abort(403)
+
     if 'db' in g:
         return g.db
 
@@ -33,7 +36,7 @@ def confirm(table, name_column, message):
         def wrapper(*args, **kwargs):
             if request.method == 'GET':
                 items = []
-                for id in request.args.getlist(table):
+                for id in request.args.getlist('id'):
                     item = getattr(get_db(), table).fetchone(id)
                     items.append({'id': item['rowid'],
                                   'name': item[name_column]})
@@ -51,7 +54,8 @@ def fetchone(table):
         @wraps(func)
         @templated
         def wrapper(*args, **kwargs):
-            row = getattr(get_db(), table).fetchone(kwargs['id'])
+            id  = kwargs.get('id')
+            row = getattr(get_db(), table).fetchone(id)
             if row is None:
                 abort(404)
             return func(row)
@@ -129,7 +133,7 @@ class Database:
         return cls
 
 
-# BUG: Ź and Ż are treated the same
+# TODO: Replace with a proper solution like ICU
 @Database.collation
 def unicmp(s1, s2):
     from .utils import ascii
@@ -183,6 +187,7 @@ class Table:
     columns   = ('',)
     search_by = ''
     sort_by   = ('',)
+    natural_sort = False
 
     def __init__(self):
         self.table = self.__class__.__name__
@@ -219,7 +224,8 @@ class Table:
             ARGS.append(f'%{query}%')
         if order_by in self.sort_by or (order_by := self.sort_by[0]):
             SQL.append(f"ORDER BY {order_by}")
-            SQL.append("COLLATE natcmp")
+            if self.natural_sort:
+                SQL.append("COLLATE natcmp")
             if (desc):
                 SQL.append("DESC")
         return self.db.execute('\n'.join(SQL), *ARGS).fetchall()

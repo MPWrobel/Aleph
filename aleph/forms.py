@@ -49,7 +49,7 @@ class StudentForm(Form):
         self.parent_id.choices = choices(
             db.parents.fetchall(),
             'New parent',
-            'parent_id', ['first_name', 'last_name'])
+            'parent_id', ['last_name', 'first_name'])
         self.group_id.choices = choices(
             db.groups.fetchall(),
             'No group',
@@ -78,3 +78,8 @@ class GroupForm(Form):
         db = get_db()
         self.level_id.choices = [(level['level_id'], level['name'])
                                  for level in db.grouplevels.fetchall()]
+
+
+class TeacherForm(Form):
+    first_name = StringField('First name', [DataRequired()])
+    last_name  = StringField('Last name', [DataRequired()])

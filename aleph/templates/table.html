@@ -3,6 +3,7 @@
 	<div x-data="{search: '', sort_by: '{{ sort_by }}', sort_desc: false}">
 		<div id="table"
 			 x-data="table('{{ table }}', [{{ items  | map(attribute=id_column) | join(', ') }}])">
+			{% if actions %}
 			<article class="actions" {% if sticky %}x-bind="sticky"{% endif %}>
 				<nav style="flex-wrap: wrap">
 					<ul style="margin-right: 16px">
@@ -64,8 +65,9 @@
 					</div>
 				</nav>
 			</article>
+			{% endif %}
 			<article style="padding: 0">
-				<figure>
+				<figure style="margin: 0">
 					<table role="grid"
 						x-data="{visible_items: [{{ items  | map(attribute=id_column) | join(', ') }}]}">
 						{{ caller() }}

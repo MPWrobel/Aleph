@@ -1,3 +1,4 @@
+{%- from 'globals.html' import dialog -%}
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 	<head>
@@ -10,7 +11,6 @@
 		<link href="{{ url_for('static', filename='print.css') }}" media="print" rel="stylesheet">
 		<link href="{{ url_for('static', filename='tom-select.default.css') }}" rel="stylesheet">
 		<script src="{{ url_for('static', filename='aleph.js') }}"></script>
-		<script src="http://SortableJS.github.io/Sortable/Sortable.js"></script>
 		<script src="{{ url_for('static', filename='tom-select.complete.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='htmx.min.js') }}"></script>
 		<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
@@ -34,7 +34,7 @@
 		</nav>
 		<main class="container-fluid">
 			<div id="dialog"></div>
-			<ul class="flash">
+			<ul id="flash">
 				{% for category, message in get_flashed_messages(with_categories=True) %}
 					<!-- TODO: Remove on finished transition -->
 					<li class="{{ category }}"
@@ -47,15 +47,15 @@
 				{% endfor %}
 			</ul>
 			{% if g.user %}
-				{# {% if path is defined and path[1] != 'index' %} #}
-				{# 	<div style="height: 0"> #}
-				{# 		<a role="button" #}
-				{# 		   class="contrast" #}
-				{# 		   href="{{ url_for(path[0]~'.index') }}"> #}
-				{# 			back #}
-				{# 		</a> #}
-				{# 	</div> #}
-				{# {% endif %} #}
+				{#{% if path is defined and path[1] != 'index' %}
+					<div style="height: 0">
+						<a role="button"
+						   class="contrast"
+						   href="{{ url_for(path[0]~'.index') }}">
+							back
+						</a>
+					</div>
+				{% endif %}#}
 				{% block main %}{% endblock %}
 			{% else %}
 				{% include 'auth/log-in.html' %}

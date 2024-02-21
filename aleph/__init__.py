@@ -22,10 +22,10 @@ def make_app(**test_config) -> Flask:
     db.init_app(app)
     filters.init_app(app)
 
-    from . import auth, lessons, students, groups
+    from . import auth, students, payments, groups
     app.register_blueprint(auth.bp)
     app.register_blueprint(groups.bp)
-    app.register_blueprint(lessons.bp)
+    app.register_blueprint(payments.bp)
     app.register_blueprint(students.bp)
 
     @app.route('/')
@@ -35,6 +35,10 @@ def make_app(**test_config) -> Flask:
     @app.route('/null')
     def null():
         return ''
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template('403.html'), 404
 
     @app.errorhandler(404)
     def page_not_found(e):

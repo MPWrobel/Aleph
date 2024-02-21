@@ -1,31 +1,144 @@
-{% from 'table.html' import table %}
-<dialog open x-data @keydown.window.escape="$el.remove()">
-	<article style="width: 500px">
-		<h2>All teachers</h2>
-		{% call table('students', teachers, {
-		'add':     ('href', url_for('students.add')),
-		'remove':  ('bulk', 'delete'),
-		}, search=False, sort_by='student_name', sticky=False) %}
-		<thead>
-			<tr>
-				<th><input type="checkbox" x-bind="select_all"></th>
-				<th>teacher</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for teacher in teachers %}
+{% set swap_dialog %}
+	hx-swap="innerHTML"
+	hx-select="dialog"
+	hx-target="#dialog"
+{% endset %}
+{% if request.method == 'GET' and  teacher %}
+	{% if 'delete' in request.args %}
+		<article>
+			<h4>Confirm action</h4>
+			<div style="display: flex">
+				<div style="flex-grow: 1">
+					Delete
+					{{ teacher.first_name }} {{ teacher.last_name }}?
+				</div>
+				<div>
+					<button class="secondary slim"
+							hx-get="{{ url_for('groups.teachers') }}"
+							{{ swap_dialog }}>
+						Cancel
+					</button>
+				</div>
+				<div>
+					<button class="delete slim"
+							hx-select-oob="#flash"
+							hx-delete="{{ url_for('groups.teachers', teacher=teacher.teacher_id) }}"
+							{{ swap_dialog }}>
+						Delete
+					</button>
+				</div>
+			</div>
+		</article>
+	{% elif 'edit' in request.args %}
+		<article>
+			<form autocomplete="off"
+				  style="margin-bottom: 0"
+				  hx-put="{{ url_for('groups.teachers') }}"
+				  {{ swap_dialog }}>
+				<h4 style="margin-bottom: 8px">Edit {{ teacher.first_name }} {{ teacher.last_name }}</h4>
+				<div style="display: flex; align-items: end">
+					<div style="margin-right: 8px">
+						{{ form.first_name.label }}
+						{{ form.first_name }}
+					</div>
+					<div style="margin-right: 8px">
+						{{ form.last_name.label }}
+						{{ form.last_name }}
+					</div>
+					<button class="secondary"
+							style="padding: 8px; width: 80px; height: 62px; margin-right: 8px">
+						Cancel
+					</button>
+					<button style="padding: 8px; width: 80px; height: 62px">
+						Add
+					</button>
+				</div>
+			</form>
+		</article>
+	{% endif  %}
+{% else %}
+	{% from 'table.html' import table %}
+	<ul id="flash">
+		{% for category, message in get_flashed_messages(with_categories=True) %}
+			<!-- TODO: Extract to a new file to keep it DRY -->
+			<li class="{{ category }}"
+				x-data="{visible: true}"
+				x-show="visible"
+				x-transition.duration.5000ms
+				x-init="setTimeout(() => $data.visible = false, 1000)">
+				{{ message | safe }}
+			</li>
+		{% endfor %}
+	</ul>
+	<dialog open x-data @keydown.window.escape="$el.remove()">
+		<article style="width: 1000px">
+			<h2>All teachers</h2>
+			{% call table('groups', teachers, {},
+			search=False, sort_by='student_name', sticky=False) %}
+			<thead>
 				<tr>
-					<td>
-						<input type="checkbox"
-							   x-bind="select_item({{ teacher.teacher_id }})">
-					</td>
-					<td>
-						{{ teacher.first_name }} {{ teacher.last_name }}
-					</td>
+					<th>teacher</th>
+					<th>assigned to<br>{{ group.name | lower }}</th>
 				</tr>
-			{% endfor %}
-		</tbody>
-		{% endcall %}
-		<button @click="$root.remove()" class="secondary">Close</button>
-	</article>
-</dialog>
+			</thead>
+			<tbody>
+				{% for teacher in teachers %}
+					{% set assigned = request.args.get('group') in (teacher.groups or '' ).split(',') %}
+					<tr>
+						<td>
+							{{ teacher.first_name }} {{ teacher.last_name }}
+							&emsp;
+							<a style="color: var(--primary)"
+							   hx-get="{{ url_for('groups.teachers', edit='', teacher=teacher.teacher_id) }}"
+							   hx-swap="innerHTML"
+							   hx-select="article"
+							   hx-target="#teacher-action">
+								edit
+							</a>
+							</a>
+							&emsp;
+							<a style="color: red"
+							   hx-get="{{ url_for('groups.teachers', delete='', teacher=teacher.teacher_id) }}"
+							   hx-swap="innerHTML"
+							   hx-select="article"
+							   hx-target="#teacher-action">
+								delete
+							</a>
+						</td>
+						<td>
+							<input type="checkbox">
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+			{% endcall %}
+			<div id="teacher-action">
+				<article>
+					<form autocomplete="off"
+						  style="margin-bottom: 0"
+						  hx-post="{{ url_for('groups.teachers') }}"
+						  {{ swap_dialog }}>
+						<h4 style="margin-bottom: 8px">Add a new teacher</h4>
+						<div style="display: flex; align-items: end">
+							<div style="margin-right: 8px">
+								{{ form.first_name.label }}
+								{{ form.first_name }}
+							</div>
+							<div style="margin-right: 8px">
+								{{ form.last_name.label }}
+								{{ form.last_name }}
+							</div>
+							<button style="padding: 8px; width: 80px; height: 62px">
+								Add
+							</button>
+						</div>
+					</form>
+				</article>
+			</div>
+			<div class="grid">
+				<button @click="$root.remove()" class="secondary">Cancel</button>
+				<button @click="$root.remove()">Save</button>
+			</div>
+		</article>
+	</dialog>
+{% endif %}

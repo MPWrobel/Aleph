@@ -10,6 +10,7 @@ bp = Blueprint('students', __name__, url_prefix='/students')
 @Database.table
 class Parents(Table):
     columns = ('parent_id', 'first_name', 'last_name', 'phone', 'email')
+    sort_by   = ('last_name', 'first_name')
 
     def fetchchildren(self, id):
         SQL = "SELECT * FROM StudentsView WHERE parent_id = ?"
@@ -46,7 +47,7 @@ def index(students):
 
 @bp.route('<int:id>', methods=('GET', 'PUT'))
 @fetchone('students')
-def student(student):
+def view(student):
     db = get_db()
 
     student_form = StudentForm(request.form, data=student, prefix='student')
@@ -107,7 +108,7 @@ def add():
 def delete():
     db = get_db()
     for student in [db.students.fetchone(id)
-                    for id in request.form.getlist('students')]:
+                    for id in request.form.getlist('id')]:
         db.students.delete(student['rowid'])
         flash('Deleted ' f'<b>{student["student_name"]}</b>', 'info')
     db.students.commit()

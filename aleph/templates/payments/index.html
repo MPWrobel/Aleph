@@ -1,0 +1,56 @@
+{% from 'table.html' import table %}
+{% extends 'base.html' %}
+
+{% block title %}Payments{% endblock %}
+
+{% block main %}
+	<h1>Payments</h1>
+	{% call table('payments', payments, {
+	'add':     ('href', url_for('students.add')),
+	'delete':     ('href', url_for('students.add')),
+	'file':     ('', {
+		'import': ('action', 'import_file'),
+		'export': ('href', url_for('students.add')),
+	})
+	}) %}
+	<thead>
+		<tr>
+			<th><input type="checkbox" x-bind="select_all"></th>
+			<th>payer</th>
+			<th>title</th>
+			<th>date</th>
+			<th>sum</th>
+			<th>student</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for payment in payments %}
+			{% include 'payments/payment.html' %}
+		{% endfor %}
+	</tbody>
+	{% endcall %}
+	{% if 'edit' in request.args %}
+		{# TODO: Replace Tom Select with a custom solution as it causes a huge slowdown #}
+		<script>
+			students = {{ names | safe }};
+
+			for (const el of document.querySelectorAll(".student-input")) {
+				new TomSelect(el, {
+					options: students,
+					items: [el.dataset.id],
+					plugins: ['dropdown_input'],
+				});
+			}
+
+			addEventListener("updateStudentInput", e => {
+				const payment_id = e.detail.payment_id;
+				const student_id = e.detail.student_id;
+				new TomSelect(`#payment-${payment_id} .student-input`, {
+					options: students,
+					items: [student_id],
+					plugins: ['dropdown_input'],
+				});
+			});
+		</script>
+	{% endif %}
+{% endblock %}

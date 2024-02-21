@@ -1,0 +1,30 @@
+{%- if not payment.student_id -%}
+	{% set style = 'style="background-color: yellow"' %}
+{%- endif -%}
+<tr id="payment-{{ payment.payment_id }}" {{ style | safe }}>
+	<td>
+		<input type="checkbox"
+			   x-bind="select_item({{ payment.payment_id }})">
+	</td>
+	<td style="max-width: 15em">{{ payment.payer }}</td>
+	<td style="max-width: 20em">
+		{# BUG: Higlights collide with each other #}
+		{{ payment.title | highlight(request.args.get('search'))
+		| highlight(payment.first_name, 'b')
+		| highlight(payment.last_name, 'b') }}
+	</td>
+	<td>{{ payment.date }}</td>
+	<td>{{ '%.2f' | format(payment.sum / 100) }}</td>
+	<td>
+		{% if 'edit' in request.args %}
+			<select hx-put="{{ url_for('payments.payment', payment_id=payment.payment_id) }}"
+					hx-target="#payment-{{ payment.payment_id }}"
+					hx-swap="outerHTML"
+					name="student_id"
+					data-id="{{ payment.student_id }}"
+					class="student-input"></select>
+		{% elif payment.student_id %}
+			{{ payment.first_name }} {{ payment.last_name }}
+		{% endif %}
+	</td>
+</tr>

@@ -1,25 +1,25 @@
 {% extends 'base.html' %}
 
-{% set add = namespace(table='students') %}
+{% set add = namespace(table='groups') %}
 {% include 'add.html' %}
 
-{% block title %}New student{% endblock %}
+{% block title %}New group{% endblock %}
 
 {% block main %}
-	<h1 style="text-align: center; margin-bottom: 32px">New student</h1>
+	<h1 style="text-align: center; margin-bottom: 32px">New group</h1>
 	<article>
-		<div id="student">
-			<h2>Student</h2>
+		<div id="group">
+			<h2>Group</h2>
 			{% if request.method == 'GET' %}
 				<form {{ add.add }}>
-					{% include 'students/student_form.html' %}
+					{% include 'groups/group_form.html' %}
 					<div class="grid">
 						{{ add.cancel }} {{ add.save }}
 					</div>
 				</form>
 			{% else %}
 				{% set readonly = True %}
-				{% include 'students/student_form.html' %}
+				{% include 'groups/group_form.html' %}
 				{{ add.next }}
 			{% endif %}
 		</div>

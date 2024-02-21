@@ -42,6 +42,16 @@ CREATE TABLE Teachers (
 	last_name  TEXT
 );
 
+CREATE VIEW TeachersView AS
+	SELECT
+		Teachers.teacher_id AS rowid,
+		Teachers.*,
+		GROUP_CONCAT(Groups.group_id, ',') AS groups
+	FROM teachers
+		LEFT JOIN GroupTeachers ON Teachers.teacher_id = Groupteachers.teacher_id
+		LEFT JOIN Groups ON GroupTeachers.group_id = Groups.group_id
+	GROUP BY Teachers.rowid;
+
 CREATE TABLE Groups (
 	group_id INTEGER PRIMARY KEY,
 	name     TEXT NOT NULL,
@@ -84,7 +94,26 @@ CREATE TABLE Payments (
 );
 
 CREATE VIEW PaymentsView AS
-	SELECT
-		title, date, sum / 100 AS paid, parent_id
+	SELECT payment_id AS rowid, *
 	FROM Payments
 	LEFT JOIN Students ON Payments.student_id = Students.student_id;
+
+CREATE VIEW ReportView AS
+	SELECT
+		Students.parent_id, names, IFNULL(paid, 0) AS paid, due
+	FROM (
+		SELECT
+			parent_id,
+			GROUP_CONCAT(student_name, ', ') AS names,
+			COUNT() * 3 * 950 - IIF(COUNT() > 1, 150 * COUNT(), 0) AS due
+		FROM StudentsView GROUP BY StudentsView.parent_id
+	) AS Students
+	LEFT JOIN (
+		SELECT
+		parent_id, SUM(sum / 100) AS paid
+		FROM Payments
+		LEFT JOIN Students ON Payments.student_id = Students.student_id
+		WHERE parent_id IS NOT NULL
+		GROUP BY parent_id
+	) AS Payments ON Students.parent_id = Payments.parent_id
+	GROUP BY Students.parent_id;

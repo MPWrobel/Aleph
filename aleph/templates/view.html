@@ -1,0 +1,62 @@
+{%- set view.update -%}
+	{% set url = url_for(view.table~'.view', id=view.id) %}
+	x-data
+	autocomplete="off"
+	hx-put={{ url }}
+	hx-push-url="true"
+	hx-target="main"
+	hx-select="main"
+	hx-swap="outerHTML"
+	@keydown.enter.prevent="$dispatch('submit')"
+{%- endset -%}
+
+{%- set view.cancel -%}
+	{% set url = url_for(view.table~'.view', id=view.id) %}
+	<button class="secondary"
+			hx-get="{{ url }}"
+			hx-push-url="true"
+			hx-select="main"
+			hx-target="main"
+			hx-swap="outerHTML">
+		Cancel
+	</button>
+{%- endset -%}
+
+{%- set view.save -%}
+	<button type="submit">Save changes</button>
+{%- endset -%}
+
+{%- set view.message -%}
+	<details role="list">
+		<summary style="text-align: center"
+				 role="button"
+				 class="secondary">
+			Message
+		</summary>
+		<ul role="listbox">
+			<li><a href="sms">send sms</a></li>
+			<li><a href="email">send email</a></li>
+		</ul>
+	</details>
+{%- endset -%}
+
+{%- set view.edit -%}
+	{% set url = url_for(view.table~'.view', id=view.id, edit='') %}
+	<button hx-get="{{ url }}"
+			hx-push-url="true"
+			hx-select="main"
+			hx-target="main"
+			hx-swap="outerHTML">
+		Edit
+	</button>
+{%- endset -%}
+
+{%- set view.delete -%}
+	{% set url = url_for(view.table~'.delete', id=view.id) %}
+	<button class="delete"
+			hx-get="{{ url }}"
+			hx-target="#dialog"
+			hx-swap="innerHTML">
+		Delete
+	</button>
+{%- endset -%}

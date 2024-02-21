@@ -8,7 +8,7 @@ document.addEventListener("alpine:init", () => {
 		items_vals: "",
 		init() {
 			this.$watch("selected_items", () => {
-				this.items_vals = JSON.stringify({[table]: this.selected_items});
+				this.items_vals = JSON.stringify({id: this.selected_items});
 
 				const selected_len = this.selected_items.length;
 				this.selected_count = `${selected_len} / ${all_items.length}`;
@@ -87,7 +87,6 @@ document.addEventListener("alpine:init", () => {
 		};
 		if (url) {
 			bind["hx-get"] = url;
-			// bind["hx-push-url"] = "?delete";
 			bind[":hx-vals"] = "items_vals";
 		}
 		return bind;

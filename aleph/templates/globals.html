@@ -1,0 +1,7 @@
+{%- macro dialog(url) -%}
+		hx-get="{{ url }}"
+		hx-push-url="false"
+		hx-select="dialog"
+		hx-swap="innerHTML"
+		hx-target="#dialog"
+{%- endmacro -%}

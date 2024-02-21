@@ -3,7 +3,6 @@ from unicodedata import decomposition
 from flask import request, render_template
 
 
-# TODO: Replace with a solution which support alphabets of various languages
 def ascii(string):
     output = ''
     for char in string:

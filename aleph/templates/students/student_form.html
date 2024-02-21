@@ -55,7 +55,7 @@
 			{{ student_form.group_id.label }}
 			<div class="data">
 				{% if student_form.group_id.data %}
-					<a href="{{ url_for('groups.group', id=student_form.group_id.data) }}">
+					<a href="{{ url_for('groups.view', id=student_form.group_id.data) }}">
 						{{ group.name }} <i>{{ group.level }}</i>
 					</a>
 				{% else %}

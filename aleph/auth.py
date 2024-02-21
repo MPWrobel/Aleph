@@ -1,4 +1,4 @@
-from flask import Blueprint, g, render_template, redirect, request, session
+from flask import Blueprint, g, render_template, request, session
 from werkzeug.security import check_password_hash
 
 from .db import Database, Table, get_db
@@ -15,7 +15,7 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 @bp.before_app_request
 def load_user():
     if user_id := session.get('user_id'):
-        g.user = get_db().users.fetchone(user_id)
+        g.user = get_db(login_required=False).users.fetchone(user_id)
 
 
 @bp.route('log-out')
@@ -29,6 +29,8 @@ def log_in():
     if request.method == 'GET':
         return render_template('auth/log-in.html')
 
+    db = get_db(login_required=False)
+
     username = request.form['username']
     password = request.form['password']
 
@@ -36,7 +38,6 @@ def log_in():
     if not username or not password:
         return render_template('auth/log-in.html')
 
-    db = get_db()
     user = db.users.fetchoneby('username', username)
 
     if user is None:

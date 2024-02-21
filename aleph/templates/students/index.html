@@ -31,13 +31,13 @@
 						   x-bind="select_item({{ student.student_id }})">
 				</td>
 				<td>
-					<a href="{{ url_for('students.student', id=student.student_id) }}">
+					<a href="{{ url_for('students.view', id=student.student_id) }}">
 						{{ student.student_name | highlight(request.args.get('search')) | nbsp  }}
 					</a>
 				</td>
 				<td>
 					{%- if student.group_id %}	
-					<a href="{{ url_for('groups.group', id=student.group_id) }}">
+					<a href="{{ url_for('groups.view', id=student.group_id) }}">
 						{{ student.group_name | nbsp }}
 						<i>{{ student.group_level }}</i>
 					</a>

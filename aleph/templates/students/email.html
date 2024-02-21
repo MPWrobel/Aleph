@@ -3,17 +3,15 @@
 {% block title %}Email: {{ parent.email }}{% endblock %}
 
 {% block main %}
-<main class="container">
 	<h2 style="text-align: center; margin-bottom: 32px">Email</h2>
 	<article>
 		<p>
-			<b>To:</b> {{ parent.first_name }} {{ parent.last_name }}
-			&lt;{{ parent.email }}&gt;
+		<b>To:</b> {{ parent.first_name }} {{ parent.last_name }}
+		&lt;{{ parent.email }}&gt;
 		</p>
 		<form autocomplete="off">
 			<textarea></textarea>
 			<button type="submit">Send</button>
 		</form>
 	</article>
-</main>
 {% endblock %}
