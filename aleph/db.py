@@ -19,7 +19,7 @@ def init_app(app: Flask):
 
 
 def get_db(login_required=True):
-    if login_required and 'user' not in g:
+    if login_required and not g.user:
         abort(403)
 
     if 'db' in g:

@@ -9,7 +9,7 @@
 		</p>
 		<div class="grid" style="margin-top: 32px">
 			<button @click="$root.remove()" class="secondary">Cancel</button>
-			<button hx-vals='{"{{ table }}": [{{ items  | map(attribute='id') | join(', ') }}]}'
+			<button hx-vals='{"id": [{{ items  | map(attribute='id') | join(', ') }}]}'
 					hx-delete="{{ url_for(table~'.delete') }}">Confirm</button>
 		</div>
 	</article>

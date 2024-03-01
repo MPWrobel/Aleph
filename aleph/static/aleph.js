@@ -5,11 +5,8 @@ document.addEventListener("alpine:init", () => {
 		selected_count: `0 / ${all_items.length}`,
 		all_selected: false,
 		any_selected: false,
-		items_vals: "",
 		init() {
 			this.$watch("selected_items", () => {
-				this.items_vals = JSON.stringify({id: this.selected_items});
-
 				const selected_len = this.selected_items.length;
 				this.selected_count = `${selected_len} / ${all_items.length}`;
 				this.all_selected = selected_len == this.all_items.length;
@@ -78,7 +75,7 @@ document.addEventListener("alpine:init", () => {
 
 	Alpine.bind("action", url => ({
 		"hx-get": url,
-		":hx-vals": "items_vals"
+		":hx-vals": "JSON.stringify({id: selected_items})"
 	}));
 
 	Alpine.bind("bulk_action", url => {
@@ -87,7 +84,7 @@ document.addEventListener("alpine:init", () => {
 		};
 		if (url) {
 			bind["hx-get"] = url;
-			bind[":hx-vals"] = "items_vals";
+			bind[":hx-vals"] = "JSON.stringify({id: selected_items})";
 		}
 		return bind;
 	});

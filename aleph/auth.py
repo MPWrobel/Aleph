@@ -16,6 +16,8 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 def load_user():
     if user_id := session.get('user_id'):
         g.user = get_db(login_required=False).users.fetchone(user_id)
+    else:
+        g.user = None
 
 
 @bp.route('log-out')

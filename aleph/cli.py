@@ -16,7 +16,7 @@ def init_app(app: Flask):
 @option('--test-data', '-t', is_flag=True)
 def init(test_data):
     echo('Initializing database... ', nl=False)
-    db = get_db()
+    db = get_db(login_required=False)
     db.executefile('aleph/schema.sql')
     echo('done')
 
@@ -34,7 +34,7 @@ def init(test_data):
 @argument('action')
 def register(action, username, password):
     if action == 'add' and username and password:
-        db = get_db()
+        db = get_db(login_required=False)
         try:
             db.users.insert({'username': username,
                              'password': generate_password_hash(password)})
